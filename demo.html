@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>URLGuard Demo</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f7f3ef;
+        --card: #ffffff;
+        --text: #1b1b1b;
+        --muted: #6b6b6b;
+        --accent: #0b7f68;
+        --error: #b00020;
+      }
+      body {
+        margin: 0;
+        font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+        background: radial-gradient(1200px 600px at 10% 10%, #ffffff, var(--bg));
+        color: var(--text);
+      }
+      .wrap {
+        max-width: 720px;
+        margin: 40px auto;
+        padding: 0 20px;
+      }
+      .card {
+        background: var(--card);
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        padding: 24px;
+      }
+      h1 {
+        margin: 0 0 8px;
+        font-size: 24px;
+        letter-spacing: 0.5px;
+      }
+      p {
+        margin: 0 0 16px;
+        color: var(--muted);
+      }
+      label {
+        display: block;
+        font-size: 14px;
+        margin: 12px 0 6px;
+      }
+      input {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #d9d9d9;
+        border-radius: 10px;
+        font-size: 15px;
+      }
+      button {
+        margin-top: 16px;
+        background: var(--accent);
+        color: #fff;
+        border: 0;
+        padding: 12px 16px;
+        border-radius: 10px;
+        font-size: 15px;
+        cursor: pointer;
+      }
+      .result {
+        margin-top: 16px;
+        padding: 12px;
+        border-radius: 10px;
+        background: #f1f8f6;
+      }
+      .error {
+        color: var(--error);
+      }
+      .small {
+        font-size: 12px;
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="card">
+        <h1>URLGuard Demo</h1>
+        <p>Input your API Key, call api /predict get class label.</p>
+
+        <label for="apiKey">API Key</label>
+        <input id="apiKey" type="password" placeholder="Input API Key"  value="REPLACE_YOUR_API_KEY"/>
+
+        <label for="url">Url</label>
+        <input id="url" type="text" placeholder="https://example.com"/>
+
+        <button id="submit">Run</button>
+        <div id="result" class="result" style="display:none;"></div>
+      </div>
+    </div>
+
+    <script>
+      const apiKeyEl = document.getElementById("apiKey");
+      const urlEl = document.getElementById("url");
+      const resultEl = document.getElementById("result");
+      const buttonEl = document.getElementById("submit");
+
+      function showResult(html, isError) {
+        resultEl.style.display = "block";
+        resultEl.innerHTML = html;
+        resultEl.classList.toggle("error", Boolean(isError));
+      }
+
+      buttonEl.addEventListener("click", async () => {
+        const apiKey = apiKeyEl.value.trim();
+        const url = urlEl.value.trim();
+
+        if (!apiKey || !url) {
+          showResult("Missing required.", true);
+          return;
+        }
+
+        showResult("submited...", false);
+
+        try {
+          const res = await fetch("predict", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-API-Key": apiKey
+            },
+            body: JSON.stringify({ url })
+          });
+
+          const data = await res.json();
+          if (!res.ok) {
+            showResult(`error：${data.detail || res.status}`, true);
+            return;
+          }
+
+          showResult(`result：<strong>${data.label}</strong>`, false);
+        } catch (err) {
+          showResult(`failed：${err.message || err}`, true);
+        }
+      });
+    </script>
+  </body>
+</html>
